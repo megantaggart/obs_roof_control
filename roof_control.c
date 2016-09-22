@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -14,6 +15,32 @@
 #define OP_HATCH_UP		3
 #define OP_HATCH_DOWN	4
 
+void generate_web_page(const char *msg)
+{
+	FILE *fp = fopen("/var/www/index.html","w");
+	if (!fp)
+	{
+		return;
+	}
+
+    time_t now;
+    time(&now);
+
+    struct tm* now_tm;
+    now_tm = localtime(&now);
+
+    char date[80];
+    strftime (date, 80, "Now it's %Y-%m-%d %H:%M:%S.", now_tm);
+
+
+    fprintf(fp,"<html><body>\n");
+	fprintf(fp,"<h1 style=\"color: #5e9ca0;\">Burr Point Astro</h1>\n");
+	fprintf(fp,"<h2 style=\"color: #2e6c80;\">Roof control</h2>\n");
+	fprintf(fp,"<h3 style=\"color: #5e9ca0;\">%s</h3>\n",msg);
+	fprintf(fp,"<h3 style=\"color: #5e9ca0;\">%s</h3>\n",date);
+	fprintf(fp,"</html></body>\n");
+	fclose(fp);
+}
 void nap(void)
 {
 	usleep(10000);
@@ -120,32 +147,32 @@ void WaitForRoof(int state)
 
 void open_roof()
 {
-	printf("Opening hatch\n");
+	generate_web_page("Opening hatch");
 	SetOutput(OP_HATCH_UP);
 	WaitforHatch(STAT_OPEN);
 	ClearOutput(OP_HATCH_UP);
-	printf("Hatch open\n");
-	printf("Opening roof\n");
+	generate_web_page("Hatch open");
+	generate_web_page("Opening roof");
 	SetOutput(OP_ROOF_OSC);
 	sleep(1);
 	ClearOutput(OP_ROOF_OSC);
 	WaitForRoof(STAT_OPEN);
-	printf("Roof Open\n");
+	generate_web_page("Roof Open");
 }
 
 void close_roof()
 {
-	printf("Closing roof\n");
+	generate_web_page("Closing roof");
 	SetOutput(OP_ROOF_OSC);
 	sleep(1);
 	ClearOutput(OP_ROOF_OSC);
 	WaitForRoof(STAT_CLOSED);
-	printf("Roof Closed\n");
-	printf("Closing hatch\n");
+	generate_web_page("Roof Closed");
+	generate_web_page("Closing hatch");
 	SetOutput(OP_HATCH_DOWN);
 	WaitforHatch(STAT_CLOSED);
 	ClearOutput(OP_HATCH_DOWN);
-	printf("Hatch closed\n");
+	generate_web_page("Hatch closed");
 }
 
 int main(int argc, char **argv)
@@ -153,11 +180,11 @@ int main(int argc, char **argv)
 	int ret = OpenDevice(0);
 	if (ret < 0)
 	{
-		printf("Failed to open k8055 deviced %d\n",ret);
+		generate_web_page("Failed to open k8055 device");
 		return 	1;
 	}
 	
-	printf("k8055 address 0 opened\n");
+	generate_web_page("k8055 address 0 opened\n");
 	ClearAllDigital();
 
 	while(1==1)
